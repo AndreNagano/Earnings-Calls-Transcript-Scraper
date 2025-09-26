@@ -46,14 +46,21 @@ def get_calls_links(ticker):
     time.sleep(2)
     accept = drv.find_element(By.ID, "onetrust-accept-btn-handler")
     accept.click()
+    
     time.sleep(3)
+    try:
+        x_button = drv.find_element(By.ID, 'popup-x')
+        x_button.click()
+    except:
+        pass
 
+    time.sleep(4)
     # If there is the option to 'view more' keep pressing it
     while view_more.is_displayed():
         try:
             drv.execute_script("arguments[0].scrollIntoView(true);", view_more)
             time.sleep(2)
-            drv.execute_script("window.scrollBy(0, -150);")
+            drv.execute_script("window.scrollBy(0, -400);")
             time.sleep(2)
             view_more.click()
         except:
@@ -66,7 +73,7 @@ def get_calls_links(ticker):
     date_pattern = re.compile(r'/(\d{4}/\d{2}/\d{2})/')
     for element in anchor_elements:
 
-        if link := element.get('href'):
+        if link := element.get_attribute('href'):
 
             if match := date_pattern.search(link):
 
@@ -147,6 +154,10 @@ def get_transcript(tickers):
     # Create a earnings calls dictionary
     earnings_calls = {}
 
+    headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+}
+
     for ticker in tickers:
 
         # Get all the links for the transcripts of the earnings calls for a given company
@@ -160,7 +171,7 @@ def get_transcript(tickers):
 
             # Try to request for the contet of the transcript's link
             try:
-                response = requests.get(url, timeout=10)
+                response = requests.get(url, timeout=10, headers=headers)
                 response.raise_for_status()
 
             except requests.RequestException as e:
@@ -168,7 +179,7 @@ def get_transcript(tickers):
                 call.append([])
 
             # With BeautifulSoup filter the content to get the calls responses
-            soup = BeautifulSoup(response.text)
+            soup = BeautifulSoup(response.text, features="lxml")
             elements = soup.select("h2, p")
             content = get_transcript_content(elements)
 
